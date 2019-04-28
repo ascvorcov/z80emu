@@ -1,6 +1,9 @@
 /* z80emu.h
  * Main header of z80emu. Don't modify this file directly. Use z80config.h and
  * z80user.h to customize the emulator to your need. 
+ *
+ * Copyright (c) 2012, 2016 Lin Ke-Fong
+ *
  * This code is free, do whatever you want with it.
  */
 

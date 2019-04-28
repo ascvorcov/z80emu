@@ -1,5 +1,8 @@
 /* z80config.h 
  * Define or comment out macros in this file to configure the emulator. 
+ *
+ * Copyright (c) 2016, 2017 Lin Ke-Fong
+ *
  * This code is free, do whatever you want with it.
  */
 
