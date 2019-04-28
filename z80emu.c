@@ -1,8 +1,5 @@
 /* z80emu.c
  * Z80 processor emulator. 
- *
- * Copyright (c) 2012-2017 Lin Ke-Fong
- *
  * This code is free, do whatever you want with it.
  */
 

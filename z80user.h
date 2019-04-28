@@ -1,9 +1,5 @@
 /* z80user.h
- * Add your code here to interface the emulated system with z80emu. See towards
- * the end of the file for an example for running zextest.
- *
- * Copyright (c) 2016, 2017 Lin Ke-Fong
- *
+ * Add your code here to interface the emulated system with z80emu. 
  * This code is free, do whatever you want with it.
  */
 
@@ -89,11 +85,11 @@ extern "C" {
  * "traps" to simulate system calls. 
  */
 
-#include "zextest.h"
+#include "z80context.h"
 
 #define Z80_READ_BYTE(address, x)                                       \
 {                                                                       \
-        (x) = ((ZEXTEST *) context)->memory[(address) & 0xffff];	\
+        (x) = ((Z80_CONTEXT *) context)->memory[(address) & 0xffff];	\
 }
 
 #define Z80_FETCH_BYTE(address, x)		Z80_READ_BYTE((address), (x))
@@ -102,7 +98,7 @@ extern "C" {
 {                                                                       \
 	unsigned char	*memory;					\
 									\
-	memory = ((ZEXTEST *) context)->memory;				\
+	memory = ((Z80_CONTEXT *) context)->memory;				\
         (x) = memory[(address) & 0xffff]                                \
                 | (memory[((address) + 1) & 0xffff] << 8);              \
 }
@@ -111,14 +107,15 @@ extern "C" {
 
 #define Z80_WRITE_BYTE(address, x)                                      \
 {                                                                       \
-        ((ZEXTEST *) context)->memory[(address) & 0xffff] = (x);	\
+	if ((address)&0xffff < 0x4000) return (x);			\
+        ((Z80_CONTEXT *) context)->memory[(address) & 0xffff] = (x);	\
 }
 
 #define Z80_WRITE_WORD(address, x)                                      \
 {                                                                       \
+	if ((address)&0xffff < 0x4000) return (x) >> 8;			\
 	unsigned char	*memory;					\
-									\
-	memory = ((ZEXTEST *) context)->memory;				\
+	memory = ((Z80_CONTEXT *) context)->memory;			\
         memory[(address) & 0xffff] = (x); 				\
         memory[((address) + 1) & 0xffff] = (x) >> 8; 			\
 }
@@ -129,13 +126,13 @@ extern "C" {
 
 #define Z80_INPUT_BYTE(port, x)                                         \
 {                                                                       \
-        SystemCall((ZEXTEST *) context);				\
+        int __port = instruction == IN_A_N ? (A << 8 | port) : (B << 8 | port); \
+        x = SystemInput((Z80_CONTEXT *) context, __port);	                \
 }
 
 #define Z80_OUTPUT_BYTE(port, x)                                        \
 {                                                                       \
-        ((ZEXTEST *) context)->is_done = !0; 				\
-        number_cycles = 0;                                              \
+        SystemOutput((Z80_CONTEXT *) context, port, x);	                \
 }
 
 #ifdef __cplusplus
