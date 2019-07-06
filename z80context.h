@@ -19,6 +19,7 @@ typedef struct Z80_CONTEXT {
 	unsigned char	keyboard[8];
 	unsigned char   border;
 	unsigned char   ear;
+	unsigned char   video_data_leak;
 	int             frame_counter;
 	int 		is_done;
 } Z80_CONTEXT;

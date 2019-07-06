@@ -13,13 +13,16 @@
 
 void InitContext(Z80_CONTEXT *context)
 {
-  Z80Reset(&context->state);
+  Z80_STATE* pst = &(context->state);
+
+  Z80Reset(pst);
   memset(context->memory, 0, sizeof(context->memory));
   memset(context->keyboard, 0xFF, sizeof(context->keyboard));
   memcpy(context->memory, z80_rom, sizeof(z80_rom));
   context->border = 0;
   context->ear = 0;
   context->frame_counter = 0;
+  context->video_data_leak = 0xFF;
   context->is_done = 0;
 }
 
@@ -88,9 +91,9 @@ void CopyScreenLine(Z80_CONTEXT *context, int y, unsigned char *frame_buf)
   const int borderLR = 48;
 
   unsigned char *memory = context->memory;
-
+  context->video_data_leak = 0xFF;
   int offset = y * lineSize;
-  if (y < 48 || y >= 240)
+  if (y < 64 || y >= 256)
   {
     // upper/lower border part
     memset(frame_buf + offset, context->border, lineSize);
@@ -103,7 +106,7 @@ void CopyScreenLine(Z80_CONTEXT *context, int y, unsigned char *frame_buf)
   offset += borderLR; // reposition from border to screen
   
   // screen Y is different from absolute bitmap Y, and does not include border
-  int y0 = y - 48; 
+  int y0 = y - 64; 
 
   // compute vertical offset, encoded as [Y7 Y6] [Y2 Y1 Y0] [Y5 Y4 Y3] [X4 X3 X2 X1 X0]
   int newY = (y0 & 0xC0) | ((y0 << 3) & 0x38) | ((y0 >> 3) & 7);
@@ -113,6 +116,7 @@ void CopyScreenLine(Z80_CONTEXT *context, int y, unsigned char *frame_buf)
   int flash = (context->frame_counter & 16) != 0 ? 1 : 0; // bit 4 is toggled every 16 frames
 
   unsigned char outBuffer[8];
+  context->video_data_leak = memory[bitmapOffset];
   for (int chx = 0; chx < 32; chx++)
   {
     unsigned char bitmap = memory[bitmapOffset + chx];
@@ -157,6 +161,9 @@ int RenderFrame(void *ptr, unsigned char* frame, int length)
 
 int SystemInput(Z80_CONTEXT *context, int port)
 {
+  if ((port & 0xFF) == 0xFF)
+    return context->video_data_leak;
+
   if ((port & 0xFF) != 0xFE)
     return 0xFF;
 
